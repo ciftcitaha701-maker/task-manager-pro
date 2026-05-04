@@ -1,0 +1,143 @@
+ /* Grundlegende Einstellungen und Farben */
+:root {
+    --primary-color: #4F46E5; /* Ein modernes Violett/Blau */
+    --primary-hover: #4338CA;
+    --bg-color: #F3F4F6;
+    --text-color: #1F2937;
+    --card-bg: #FFFFFF;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+}
+
+/* Das Haupt-Gerüst */
+.app-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 5px;
+    color: var(--primary-color);
+}
+
+header p {
+    color: #6B7280;
+    margin-top: 0;
+}
+
+/* Der Karten-Look für alle Sektionen */
+.card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin-bottom: 20px;
+}
+
+.card h2 {
+    margin-top: 0;
+    font-size: 1.2rem;
+    border-bottom: 2px solid var(--bg-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Eingabe-Bereich */
+.input-group {
+    display: flex;
+    gap: 15px; /* Abstand zwischen den Feldern */
+    flex-wrap: wrap;
+}
+
+input {
+    padding: 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+}
+
+input[type="text"] {
+    flex: 2; /* Nimmt mehr Platz ein */
+}
+
+input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Das Grid (Raster) für die zwei unteren Listen */
+.bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Zwei gleich große Spalten */
+    gap: 20px;
+}
+
+.filter-input {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: #6B7280;
+}
+
+/* Listen-Styling */
+.task-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.task-list li {
+    background-color: var(--bg-color);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.task-list li span.date-badge {
+    display: block;
+    font-size: 0.8rem;
+    color: #6B7280;
+    margin-top: 5px;
+}
+
+.empty-state {
+    background-color: transparent !important;
+    border-left: none !important;
+    text-align: center;
+    color: #9CA3AF;
+    font-style: italic;
+}

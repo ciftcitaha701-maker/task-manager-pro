@@ -1,0 +1,48 @@
+ <!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager Pro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Task Manager Pro</h1>
+            <p>Dein professioneller Begleiter für den Alltag</p>
+        </header>
+
+        <main class="dashboard">
+            <section class="card input-section">
+                <h2>Neue Aufgabe anlegen</h2>
+                <div class="input-group">
+                    <input type="text" id="task-text" placeholder="Was musst du erledigen?">
+                    <input type="date" id="task-date">
+                    <button id="add-btn">Aufgabe hinzufügen</button>
+                </div>
+            </section>
+
+            <div class="bottom-grid">
+                <section class="card list-section">
+                    <h2>Alle Aufgaben (Überblick)</h2>
+                    <ul id="all-tasks-list" class="task-list">
+                        <li class="empty-state">Noch keine Aufgaben vorhanden.</li>
+                    </ul>
+                </section>
+
+                <section class="card calendar-section">
+                    <h2>Aufgaben nach Datum</h2>
+                    <p class="subtitle">Wähle einen Tag, um die Aufgaben zu sehen:</p>
+                    <input type="date" id="filter-date" class="filter-input">
+                    <ul id="filtered-tasks-list" class="task-list">
+                        <li class="empty-state">Bitte wähle ein Datum aus.</li>
+                    </ul>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
