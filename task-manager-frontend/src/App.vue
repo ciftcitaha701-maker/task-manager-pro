@@ -1,7 +1,6 @@
 <template>
   <div id="app">
-    <h1>Task Manager Pro 2.0</h1>
-    <!-- Hier binden wir deine neue Liste ein -->
+    <h1>Task Manager Pro</h1>
     <TaskList />
   </div>
 </template>
