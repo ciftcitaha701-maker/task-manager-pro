@@ -27,7 +27,7 @@ const newDate = ref('');
 const tasks = ref([]);
 
 // 3. Die URL zu unserem Java-Backend (Port 8081)
-const backendUrl = 'http://localhost:8081/tasks';
+const backendUrl = 'https://task-manager-backend-aulj.onrender.com';
 
 // FUNKTION 1: Alle Aufgaben vom Backend LADEN (GET)
 async function loadTasks() {
