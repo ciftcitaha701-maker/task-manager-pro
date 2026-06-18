@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "https://task-manager-pro-i74q.onrender.com") 
+@CrossOrigin(origins = "*")
 public class TaskController {
 
     // 1. Eine leere, flexible Liste, die neue Aufgaben speichern kann

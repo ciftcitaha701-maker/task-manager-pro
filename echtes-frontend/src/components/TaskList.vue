@@ -1,125 +1,160 @@
 <template>
-  <div class="task-list-container">
-    <h2>Meine Aufgaben</h2>
+  <div class="wrapper">
+    <h1>Meine Aufgaben</h1>
 
-    <div class="add-task-form">
-      <input v-model="newTitle" placeholder="Neue Aufgabe tippen..." />
+    <div class="form">
+      <input v-model="newTitle" placeholder="Neue Aufgabe..." @keyup.enter="saveTask" />
       <input v-model="newDate" type="date" />
-      <button @click="saveTask">Speichern</button>
+      <button @click="saveTask">+ Speichern</button>
     </div>
 
-    <ul>
+    <p v-if="error" class="error">{{ error }}</p>
+
+    <ul v-if="tasks.length > 0">
       <li v-for="task in tasks" :key="task.id" class="task-item">
-        <strong>{{ task.title }}</strong> - Fällig am: {{ task.date }}
+        <span class="task-title">{{ task.title }}</span>
+        <span v-if="task.date" class="task-date">{{ task.date }}</span>
       </li>
     </ul>
+
+    <p v-else class="empty">Noch keine Aufgaben vorhanden.</p>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 
-// 1. Leere "Behälter" für unser Formular
 const newTitle = ref('');
 const newDate = ref('');
-
-// 2. Unsere Aufgabenliste (startet komplett leer!)
 const tasks = ref([]);
+const error = ref('');
 
-// 3. Die URL zu unserem Java-Backend (Port 8081)
 const backendUrl = 'https://task-manager-backend-aulj.onrender.com/tasks';
 
-// FUNKTION 1: Alle Aufgaben vom Backend LADEN (GET)
 async function loadTasks() {
   try {
     const response = await fetch(backendUrl);
     const data = await response.json();
-    tasks.value = data; // Die Backend-Daten in unsere Liste packen
-  } catch (error) {
-    console.error('Fehler beim Laden:', error);
+    tasks.value = data;
+  } catch (e) {
+    error.value = 'Backend nicht erreichbar.';
   }
 }
 
-// FUNKTION 2: Eine neue Aufgabe ans Backend SENDEN (POST)
 async function saveTask() {
-  // Wenn kein Titel eingetippt wurde, brechen wir ab
-  if (newTitle.value === '') return;
-
-  // Wir schnüren ein Paket mit den eingetippten Daten
-  const newTaskData = {
-    title: newTitle.value,
-    date: newDate.value
-  };
-
-  // Wir stellen den "Briefumschlag" für den Versand ein (POST-Methode)
-  const requestOptions = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(newTaskData)
-  };
+  if (newTitle.value.trim() === '') return;
 
   try {
-    // Wir schießen das Paket ans Backend
-    const response = await fetch(backendUrl, requestOptions);
+    const response = await fetch(backendUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: newTitle.value.trim(), date: newDate.value })
+    });
     const savedTask = await response.json();
-
-    // Wir fügen die Antwort vom Backend sofort zu unserer Liste auf dem Bildschirm hinzu
     tasks.value.push(savedTask);
-
-    // Formular-Felder wieder leer machen für die nächste Aufgabe
     newTitle.value = '';
     newDate.value = '';
-  } catch (error) {
-    console.error('Fehler beim Speichern:', error);
+    error.value = '';
+  } catch (e) {
+    error.value = 'Fehler beim Speichern.';
   }
 }
 
-// Wenn die Seite geladen wird, holen wir sofort die aktuellen Aufgaben aus dem Backend
-onMounted(() => {
-  loadTasks();
-});
+onMounted(loadTasks);
 </script>
 
 <style scoped>
-.task-list-container {
-  background: #f4f4f4;
-  padding: 20px;
-  border-radius: 10px;
-  color: black;
-  max-width: 500px;
-  margin: 0 auto;
+.wrapper {
+  max-width: 560px;
+  margin: 60px auto;
+  font-family: system-ui, sans-serif;
+  padding: 0 16px;
 }
-.add-task-form {
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 28px;
+  color: #1a1a2e;
+}
+
+.form {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
 }
+
 input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 10px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
   flex: 1;
+  min-width: 140px;
 }
+
+input:focus {
+  border-color: #42b983;
+}
+
 button {
-  padding: 8px 15px;
-  background-color: #42b983;
+  padding: 10px 18px;
+  background: #42b983;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: bold;
+  transition: background 0.2s;
+  white-space: nowrap;
 }
+
 button:hover {
-  background-color: #33a06f;
+  background: #33a06f;
 }
-.task-item {
-  margin: 10px 0;
-  padding: 10px;
-  background: white;
-  border-left: 5px solid #42b983;
+
+ul {
   list-style: none;
-  text-align: left;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border-left: 4px solid #42b983;
+}
+
+.task-title {
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.task-date {
+  font-size: 13px;
+  color: #888;
+}
+
+.empty {
+  color: #aaa;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.error {
+  color: #e53e3e;
+  margin-bottom: 12px;
+  font-size: 14px;
 }
 </style>
