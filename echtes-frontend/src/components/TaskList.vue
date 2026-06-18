@@ -34,8 +34,9 @@ const backendUrl = 'https://task-manager-backend-aulj.onrender.com/tasks';
 async function loadTasks() {
   try {
     const response = await fetch(backendUrl);
+    if (!response.ok) return;
     const data = await response.json();
-    tasks.value = data;
+    tasks.value = Array.isArray(data) ? data : [];
   } catch (e) {
     error.value = 'Backend nicht erreichbar.';
   }
@@ -50,7 +51,9 @@ async function saveTask() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: newTitle.value.trim(), date: newDate.value })
     });
+    if (!response.ok) { error.value = 'Fehler beim Speichern.'; return; }
     const savedTask = await response.json();
+    if (!savedTask.title) { error.value = 'Fehler beim Speichern.'; return; }
     tasks.value.push(savedTask);
     newTitle.value = '';
     newDate.value = '';
