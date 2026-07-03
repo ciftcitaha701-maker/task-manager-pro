@@ -1,0 +1,19 @@
+name: Frontend Tests
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: echtes-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Abhaengigkeiten installieren
+        run: npm ci
+      - name: Frontend-Tests ausfuehren
+        run: npm test
