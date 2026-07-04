@@ -8,17 +8,102 @@ body {
   padding: 0;
 }
 
+/* Farbschema: helle Werte als Standard, dunkle Werte bei Dark Mode */
+:root {
+  color-scheme: light dark;
+
+  --accent: #10b981;
+  --accent-dark: #059669;
+  --accent-text: #059669;
+
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-soft: #94a3b8;
+
+  --card-bg: #ffffff;
+  --card-border: #eef2f6;
+  --item-bg: #f8fafc;
+  --item-hover-bg: #ffffff;
+
+  --input-bg: #f8fafc;
+  --input-focus-bg: #ffffff;
+  --input-border: #e2e8f0;
+
+  --chip-bg: #eef2f7;
+  --chip-text: #475569;
+
+  --soft-green-bg: #ecfdf5;
+  --soft-green-border: #d1fae5;
+  --soft-green-strong: #a7f3d0;
+  --pinned-bg: #f0fdf7;
+
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+
+  --bullet-border: #cbd5e1;
+
+  --shadow-color: rgba(15, 23, 42, 0.08);
+  --shadow-soft: rgba(15, 23, 42, 0.06);
+
+  --bg-body-1: #f8fafc;
+  --bg-body-2: #eef2f7;
+  --bg-glow-1: rgba(16, 185, 129, 0.12);
+  --bg-glow-2: rgba(59, 130, 246, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent-text: #34d399;
+
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-soft: #64748b;
+
+    --card-bg: #172032;
+    --card-border: #263248;
+    --item-bg: #1d2940;
+    --item-hover-bg: #233150;
+
+    --input-bg: #101828;
+    --input-focus-bg: #111d31;
+    --input-border: #2e3d55;
+
+    --chip-bg: #263248;
+    --chip-text: #cbd5e1;
+
+    --soft-green-bg: rgba(16, 185, 129, 0.14);
+    --soft-green-border: rgba(16, 185, 129, 0.3);
+    --soft-green-strong: rgba(16, 185, 129, 0.45);
+    --pinned-bg: rgba(16, 185, 129, 0.08);
+
+    --danger: #f87171;
+    --danger-bg: rgba(220, 38, 38, 0.14);
+    --danger-border: rgba(248, 113, 113, 0.4);
+
+    --bullet-border: #3d4c63;
+
+    --shadow-color: rgba(0, 0, 0, 0.45);
+    --shadow-soft: rgba(0, 0, 0, 0.35);
+
+    --bg-body-1: #0b1220;
+    --bg-body-2: #0f1626;
+    --bg-glow-1: rgba(16, 185, 129, 0.1);
+    --bg-glow-2: rgba(59, 130, 246, 0.07);
+  }
+}
+
 body {
   min-height: 100vh;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 16px;
   line-height: 1.5;
-  color: #0f172a;
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background:
-    radial-gradient(1100px 550px at 85% -10%, rgba(16, 185, 129, 0.12), transparent 60%),
-    radial-gradient(900px 500px at -10% 25%, rgba(59, 130, 246, 0.08), transparent 55%),
-    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    radial-gradient(1100px 550px at 85% -10%, var(--bg-glow-1), transparent 60%),
+    radial-gradient(900px 500px at -10% 25%, var(--bg-glow-2), transparent 55%),
+    linear-gradient(180deg, var(--bg-body-1) 0%, var(--bg-body-2) 100%);
   background-attachment: fixed;
 }

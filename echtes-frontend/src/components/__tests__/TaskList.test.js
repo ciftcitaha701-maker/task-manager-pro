@@ -91,7 +91,7 @@ describe('TaskList', () => {
     expect(wrapper.text()).toContain('Entfernen')
   })
 
-  it('entfernt eine Aufgabe ueber den Entfernen-Button', async () => {
+  it('entfernt eine Aufgabe erst nach Bestaetigung der Rueckfrage', async () => {
     const fetchMock = vi.fn()
       // 1. Aufruf: GET beim Laden
       .mockResolvedValueOnce({ ok: true, json: async () => [{ id: 1, title: 'Einkaufen', date: '', pinned: false }] })
@@ -107,10 +107,92 @@ describe('TaskList', () => {
     await deleteBtn.trigger('click')
     await flushPromises()
 
+    // Erst kommt die Rueckfrage, noch kein DELETE-Request
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(wrapper.text()).toContain('Wirklich löschen?')
+
+    const confirmBtn = wrapper.findAll('button').find(b => b.text().includes('Ja, löschen'))
+    await confirmBtn.trigger('click')
+    await flushPromises()
+
     const deleteCall = fetchMock.mock.calls[1]
     expect(deleteCall[0]).toContain('/tasks/1')
     expect(deleteCall[1].method).toBe('DELETE')
     expect(wrapper.findAll('.task-item')).toHaveLength(0)
+  })
+
+  it('hakt eine Aufgabe ueber den Kreis ab und zeigt sie durchgestrichen', async () => {
+    const fetchMock = vi.fn()
+      // 1. Aufruf: GET beim Laden
+      .mockResolvedValueOnce({ ok: true, json: async () => [{ id: 1, title: 'Einkaufen', date: '', pinned: false, done: false }] })
+      // 2. Aufruf: PUT /tasks/1/done
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 1, title: 'Einkaufen', date: '', pinned: false, done: true }) })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const wrapper = mount(TaskList)
+    await flushPromises()
+
+    await wrapper.find('.bullet').trigger('click')
+    await flushPromises()
+
+    const doneCall = fetchMock.mock.calls[1]
+    expect(doneCall[0]).toContain('/tasks/1/done')
+    expect(doneCall[1].method).toBe('PUT')
+    expect(wrapper.find('.task-title.done').exists()).toBe(true)
+  })
+
+  it('filtert Aufgaben ueber die Tabs Alle/Offen/Erledigt', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
+        { id: 1, title: 'Fertige Aufgabe', date: '', pinned: false, done: true },
+        { id: 2, title: 'Offene Aufgabe', date: '', pinned: false, done: false },
+      ],
+    }))
+
+    const wrapper = mount(TaskList)
+    await flushPromises()
+
+    expect(wrapper.findAll('.task-item')).toHaveLength(2)
+
+    const offenTab = wrapper.findAll('button').find(b => b.text() === 'Offen')
+    await offenTab.trigger('click')
+    expect(wrapper.findAll('.task-item')).toHaveLength(1)
+    expect(wrapper.text()).toContain('Offene Aufgabe')
+    expect(wrapper.text()).not.toContain('Fertige Aufgabe')
+
+    const erledigtTab = wrapper.findAll('button').find(b => b.text() === 'Erledigt')
+    await erledigtTab.trigger('click')
+    expect(wrapper.findAll('.task-item')).toHaveLength(1)
+    expect(wrapper.text()).toContain('Fertige Aufgabe')
+  })
+
+  it('bearbeitet Titel und Datum einer Aufgabe', async () => {
+    const fetchMock = vi.fn()
+      // 1. Aufruf: GET beim Laden
+      .mockResolvedValueOnce({ ok: true, json: async () => [{ id: 1, title: 'Alter Titel', date: '2026-07-01', pinned: false, done: false }] })
+      // 2. Aufruf: PUT /tasks/1
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 1, title: 'Neuer Titel', date: '2026-07-02', pinned: false, done: false }) })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const wrapper = mount(TaskList)
+    await flushPromises()
+
+    await wrapper.find('.task-item').trigger('click')
+    const editBtn = wrapper.findAll('button').find(b => b.text().includes('Bearbeiten'))
+    await editBtn.trigger('click')
+
+    await wrapper.find('.edit-title').setValue('Neuer Titel')
+    const saveBtn = wrapper.findAll('button').find(b => b.text().includes('Übernehmen'))
+    await saveBtn.trigger('click')
+    await flushPromises()
+
+    const putCall = fetchMock.mock.calls[1]
+    expect(putCall[0]).toContain('/tasks/1')
+    expect(putCall[1].method).toBe('PUT')
+    expect(JSON.parse(putCall[1].body).title).toBe('Neuer Titel')
+    expect(wrapper.text()).toContain('Neuer Titel')
+    expect(wrapper.text()).not.toContain('Alter Titel')
   })
 
   it('heftet eine Aufgabe an, zeigt das Pin-Symbol und sortiert sie nach oben', async () => {
