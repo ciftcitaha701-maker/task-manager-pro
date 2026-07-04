@@ -12,7 +12,7 @@
       <div class="form">
         <input v-model="newTitle" class="title-input" placeholder="Neue Aufgabe..." @keyup.enter="saveTask" />
         <input v-model="newDate" class="date-input" type="date" />
-        <button type="button" @click="saveTask">+ Speichern</button>
+        <button type="button" class="save-btn" @click="saveTask">+ Speichern</button>
       </div>
 
       <p v-if="error" class="error">{{ error }}</p>
@@ -23,12 +23,34 @@
       </div>
 
       <ul v-if="tasks.length > 0">
-        <li v-for="task in tasks" :key="task.id" class="task-item">
-          <span class="bullet" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5" /></svg>
-          </span>
-          <span class="task-title">{{ task.title }}</span>
-          <span v-if="task.date" class="task-date">{{ formatDate(task.date) }}</span>
+        <li
+          v-for="task in tasks"
+          :key="task.id"
+          class="task-item"
+          :class="{ selected: selectedId === task.id, pinned: task.pinned }"
+          @click="toggleSelect(task.id)"
+        >
+          <div class="task-row">
+            <span class="bullet" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5" /></svg>
+            </span>
+            <span class="task-title">{{ task.title }}</span>
+            <span v-if="task.pinned" class="pin-badge" title="Angeheftet" aria-label="Angeheftet">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5" /><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z" /></svg>
+            </span>
+            <span v-if="task.date" class="task-date">{{ formatDate(task.date) }}</span>
+          </div>
+
+          <div v-if="selectedId === task.id" class="task-actions">
+            <button type="button" class="action-btn" @click.stop="togglePin(task)">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5" /><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z" /></svg>
+              {{ task.pinned ? 'Loslösen' : 'Anheften' }}
+            </button>
+            <button type="button" class="action-btn danger" @click.stop="removeTask(task)">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M10 11v6M14 11v6" /></svg>
+              Entfernen
+            </button>
+          </div>
         </li>
       </ul>
 
@@ -59,6 +81,7 @@ const newDate = ref('');
 const tasks = ref([]);
 const error = ref('');
 const loading = ref(true);
+const selectedId = ref(null);
 
 const backendUrl = 'https://task-manager-backend-aulj.onrender.com/tasks';
 
@@ -68,12 +91,23 @@ function formatDate(dateString) {
   return `${parts[2]}.${parts[1]}.${parts[0]}`;
 }
 
+// Angeheftete Aufgaben zuerst, innerhalb der Gruppen nach ID
+function sortTasks(list) {
+  return [...list].sort(
+    (a, b) => (b.pinned === true) - (a.pinned === true) || a.id - b.id
+  );
+}
+
+function toggleSelect(id) {
+  selectedId.value = selectedId.value === id ? null : id;
+}
+
 async function loadTasks() {
   try {
     const response = await fetch(backendUrl);
     if (!response.ok) return;
     const data = await response.json();
-    tasks.value = Array.isArray(data) ? data : [];
+    tasks.value = sortTasks(Array.isArray(data) ? data : []);
   } catch (e) {
     error.value = 'Backend nicht erreichbar.';
   } finally {
@@ -93,12 +127,36 @@ async function saveTask() {
     if (!response.ok) { error.value = 'Fehler beim Speichern.'; return; }
     const savedTask = await response.json();
     if (!savedTask.title) { error.value = 'Fehler beim Speichern.'; return; }
-    tasks.value.push(savedTask);
+    tasks.value = sortTasks([...tasks.value, savedTask]);
     newTitle.value = '';
     newDate.value = '';
     error.value = '';
   } catch (e) {
     error.value = 'Fehler beim Speichern.';
+  }
+}
+
+async function removeTask(task) {
+  try {
+    const response = await fetch(`${backendUrl}/${task.id}`, { method: 'DELETE' });
+    if (!response.ok) { error.value = 'Fehler beim Entfernen.'; return; }
+    tasks.value = tasks.value.filter(t => t.id !== task.id);
+    if (selectedId.value === task.id) selectedId.value = null;
+    error.value = '';
+  } catch (e) {
+    error.value = 'Fehler beim Entfernen.';
+  }
+}
+
+async function togglePin(task) {
+  try {
+    const response = await fetch(`${backendUrl}/${task.id}/pin`, { method: 'PUT' });
+    if (!response.ok) { error.value = 'Fehler beim Anheften.'; return; }
+    const updated = await response.json();
+    tasks.value = sortTasks(tasks.value.map(t => (t.id === updated.id ? updated : t)));
+    error.value = '';
+  } catch (e) {
+    error.value = 'Fehler beim Anheften.';
   }
 }
 
@@ -187,7 +245,7 @@ input:focus {
   box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
 }
 
-button {
+.save-btn {
   padding: 12px 20px;
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
@@ -202,12 +260,12 @@ button {
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
-button:hover {
+.save-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
 }
 
-button:active {
+.save-btn:active {
   transform: translateY(0);
 }
 
@@ -248,12 +306,12 @@ ul {
 
 .task-item {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
   padding: 14px 16px;
   background: #f8fafc;
   border: 1px solid #eef2f6;
   border-radius: 14px;
+  cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background 0.15s;
   animation: fadeIn 0.25s ease;
 }
@@ -263,6 +321,23 @@ ul {
   border-color: #d1fae5;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
   transform: translateY(-1px);
+}
+
+.task-item.selected {
+  background: #ffffff;
+  border-color: #a7f3d0;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.task-item.pinned {
+  background: #f0fdf7;
+  border-color: #a7f3d0;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .bullet {
@@ -285,6 +360,13 @@ ul {
   overflow-wrap: anywhere;
 }
 
+.pin-badge {
+  color: #059669;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .task-date {
   font-size: 0.82rem;
   color: #475569;
@@ -292,6 +374,44 @@ ul {
   padding: 4px 10px;
   border-radius: 999px;
   white-space: nowrap;
+}
+
+/* Aktionen beim Klick auf eine Aufgabe */
+.task-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e2e8f0;
+  animation: fadeIn 0.2s ease;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.action-btn:hover {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.action-btn.danger:hover {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 /* Ladeanzeige */
@@ -376,6 +496,6 @@ ul {
   h1 { font-size: 1.9rem; }
   .form { flex-direction: column; }
   .date-input { min-width: 0; }
-  button { width: 100%; }
+  .save-btn { width: 100%; }
 }
 </style>
